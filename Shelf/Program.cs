@@ -5,7 +5,7 @@ internal class Program
     private static void Main(string[] args)
     {
         List<Book> listbook = new List<Book>();
-
+        listbook = LoadFile();
         do
         {
             switch (Menu())
@@ -17,11 +17,7 @@ internal class Program
                     Console.Clear();
                     break;
                 case 2:
-                    Console.WriteLine("EMPRESTAR LIVRO");
-                    var text = listbook;
-                    Console.WriteLine(text);
-                    Console.Write("Informe o titúlo do livro a ser emprestado: ");
-                    string title = Console.ReadLine();
+                    Lend();
 
                     Console.ReadLine();
                     break;
@@ -29,8 +25,12 @@ internal class Program
                     break;
                 case 4:
                     Console.WriteLine("Consulta de Livros.");
-                    
+                    foreach (Book book in listbook)
+                    {
+                        Console.WriteLine(book.ToString());
+                    }
                     Console.WriteLine("\nAperte qualquer tecla para voltar ao menu.");
+
                     Console.ReadLine();
                     break;
                 case 5:
@@ -70,7 +70,10 @@ internal class Program
                 if (File.Exists("shelf.txt"))
                 {
                     StreamWriter sw = new("shelf.txt");
-                    sw.WriteLine(book.ToString());
+                    foreach (var i in listbook)
+                    {
+                        sw.WriteLine(i.ToString());
+                    }
                     Console.WriteLine("Processando...");
                     Thread.Sleep(1000);
                     sw.Close();
@@ -94,34 +97,56 @@ internal class Program
 
             }
         }
-
         List<Book> LoadFile()
         {
+
+            Book book = new Book();
+            string txt = "";
             try
             {
+                
+
                 if (File.Exists("shelf.txt"))
                 {
                     StreamReader sr = new("shelf.txt");
-                    string txt;
-                    while ((txt = sr.ReadLine()) != null)
+                    string[] aux;
+                    txt = sr.ReadLine();
+                    do
                     {
-                        foreach (var i in txt.Split(","))
-                        {
-                            
-                        }
-                    }
+                        
+                        aux = txt.Split(",");
+                        book.Title = aux[0];
+                        book.Author = aux[1];
+                        book.Isbn = aux[2];
+                        book.Edition = aux[3];
+                        listbook.Add(book);
+                    } while(sr.Read() != null);
+                    sr.Close();
                 }
                 else
                 {
-                    StreamReader sr = new("shelf.txt");
-
+                    Console.WriteLine("Estante vazia!");
+                    Thread.Sleep(1200);
+                    Menu();
                 }
             }
             catch
             {
-                Console.WriteLine("Não existe um arquivo criado!");
+
+            }
+            finally
+            {
+
             }
             return listbook;
+        }
+        void Lend()
+        {
+            Console.WriteLine("Livros na estante.");
+            foreach (Book book in listbook)
+            {
+                Console.WriteLine(book.ToString());
+            }
         }
 
         //string ReadFile(string f)
