@@ -10,10 +10,10 @@ namespace Shelf
     {
         public string Title { get; set; }
         public string Author { get; set; }
-        public string Isbn { get; set; }
-        public string Edition { get; set; }
+        public long Isbn { get; set; }
+        public int Edition { get; set; }
 
-        public Book(string t, string a, string i, string e)
+        public Book(string t, string a, long i, int e)
         {
             this.Title = t;
             this.Author = a;
@@ -22,11 +22,15 @@ namespace Shelf
         }
         public Book()
         {
-            
+
         }
         public override string ToString()
         {
-            return Title+ ", " + Author + ", " + Edition + ", " + Isbn;
+            return $"Title: {Title} |Author: {Author} |Edition: {Edition}| Isbn: {Isbn}";
+        }
+        public string ToFile()
+        {
+            return Title + ", " + Author + ", " + Edition + ", " + Isbn;
         }
     }
 }

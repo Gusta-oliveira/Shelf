@@ -1,31 +1,46 @@
-﻿using Shelf;
+﻿using System.ComponentModel.Design;
+using Shelf;
 
 internal class Program
 {
+    static int Menu()
+    {
+        Console.WriteLine("-------Estante de Livros-------");
+        Console.Write("1 - Adicionar Livro;\n2 - Emprestar livro;\n3 - Mover Livro para Lendo;\n4 - Consultar Livros;\n5 - Fechar Estante;\n");
+        Console.Write("-------------------------------\nInforme a operação: ");
+        var op = int.Parse(Console.ReadLine());
+        Console.Clear();
+        return op;
+    }
     private static void Main(string[] args)
     {
-        List<Book> listbook = new List<Book>();
-        listbook = LoadFile();
+        string shelffile = "shelf.txt";
+        string lend = "lends.txt";
+        List<Book> mybook = new List<Book>();
+        List<Book> lendbook = new List<Book>();
+        mybook = LoadFile(mybook, shelffile);
+        lendbook = LoadFile(lendbook, lend);
+
         do
         {
             switch (Menu())
             {
                 case 1:
                     Console.WriteLine("Adicionando Livro a Estante\n ");
-                    WriteFile(CreatBook());
+                    mybook = CreatBook(mybook);
+                    WriteFile(mybook, shelffile);
                     Thread.Sleep(1800);
                     Console.Clear();
                     break;
                 case 2:
-                    Lend();
-
-                    Console.ReadLine();
+                    lendbook = Lend(lendbook, mybook);
+                    WriteFile(lendbook, lend);
                     break;
                 case 3:
                     break;
                 case 4:
                     Console.WriteLine("Consulta de Livros.");
-                    foreach (Book book in listbook)
+                    foreach (Book book in mybook)
                     {
                         Console.WriteLine(book.ToString());
                     }
@@ -40,141 +55,111 @@ internal class Program
                     break;
             }
         } while (true);
+    }
 
-        int Menu()
+    private static List<Book> CreatBook(List<Book> lis)
+    {
+        Console.Write("Informe o Titúlo: ");
+        string title = Console.ReadLine();
+        Console.Write("Informe o Autor: ");
+        string author = Console.ReadLine();
+        Console.Write("Informe o ISBN: ");
+        long isbn = long.Parse(Console.ReadLine());
+        Console.Write("Informe a Edição: ");
+        int edition = int.Parse(Console.ReadLine());
+        lis.Add(new(title, author, isbn, edition));
+        return lis;
+    }
+    private static List<Book> WriteFile(List<Book> l, string f)
+    {
+        StreamWriter sw = new(f);
+        try
         {
-            Console.WriteLine("-------Estante de Livros-------");
-            Console.Write("1 - Adicionar Livro;\n2 - Emprestar livro;\n3 - Mover Livro para Lendo;\n4 - Consultar Livros;\n5 - Fechar Estante;\n");
-            Console.Write("-------------------------------\nInforme a operação: ");
-            var op = int.Parse(Console.ReadLine());
-            Console.Clear();
-            return op;
-        }
-        Book CreatBook()
-        {
-            Console.Write("Informe o Titúlo: ");
-            string title = Console.ReadLine();
-            Console.Write("Informe o Autor: ");
-            string author = Console.ReadLine();
-            Console.Write("Informe o ISBN: ");
-            string isbn = Console.ReadLine();
-            Console.Write("Informe a Edição: ");
-            string edition = Console.ReadLine();
-            return new(title, author, isbn, edition);
-        }
-        void WriteFile(Book book)
-        {
-            try
+            
+            foreach (var i in l)
             {
-                listbook.Add(book);
-                if (File.Exists("shelf.txt"))
-                {
-                    StreamWriter sw = new("shelf.txt");
-                    foreach (var i in listbook)
-                    {
-                        sw.WriteLine(i.ToString());
-                    }
-                    Console.WriteLine("Processando...");
-                    Thread.Sleep(1000);
-                    sw.Close();
-                }
-                else
-                {
-                    StreamWriter sw = new("shelf.txt");
-                    sw.Write(book.ToString());
-                    Console.WriteLine("Processando...");
-                    Thread.Sleep(1000);
-                    sw.Close();
-                }
+                sw.WriteLine(i.ToFile());
             }
-            catch (Exception e)
-            {
-
-            }
-            finally
-            {
-                Console.WriteLine("Livro registrado com sucesso.");
-
-            }
+            Console.WriteLine("Processando...");
+            Thread.Sleep(1000);
+            
         }
-        List<Book> LoadFile()
+        catch (Exception e)
         {
 
-            Book book = new Book();
-            string txt = "";
-            try
+        }
+        finally
+        {
+            sw.Close();
+            Console.WriteLine("Livro registrado com sucesso.");
+        }
+        return l;
+    }
+    private static List<Book> LoadFile(List<Book> lb, string f)
+    {
+        StreamReader sr = new(f);
+        try
+        {
+            
+            if (File.Exists(f))
             {
                 
-
-                if (File.Exists("shelf.txt"))
+                while (!sr.EndOfStream)
                 {
-                    StreamReader sr = new("shelf.txt");
-                    string[] aux;
-                    txt = sr.ReadLine();
-                    do
-                    {
-                        
-                        aux = txt.Split(",");
-                        book.Title = aux[0];
-                        book.Author = aux[1];
-                        book.Isbn = aux[2];
-                        book.Edition = aux[3];
-                        listbook.Add(book);
-                    } while(sr.Read() != null);
-                    sr.Close();
+                    string[] aux = sr.ReadLine().Split(",");
+                    string title = aux[0];
+                    string autor = aux[1];
+                    long isbn = long.Parse(aux[2]);
+                    int edition = int.Parse(aux[3]);
+                    lb.Add(new(title, autor, isbn, edition));
                 }
-                else
-                {
-                    Console.WriteLine("Estante vazia!");
-                    Thread.Sleep(1200);
-                    Menu();
-                }
+                
             }
-            catch
+            else
             {
-
+                Console.WriteLine("Criando.");
+                Thread.Sleep(1200);
             }
-            finally
-            {
-
-            }
-            return listbook;
         }
-        void Lend()
+        catch
         {
-            Console.WriteLine("Livros na estante.");
-            foreach (Book book in listbook)
+        }
+        finally
+        {
+            sr.Close();
+        }
+        return lb;
+    }
+    private static List<Book> Lend(List<Book> lb, List<Book> mb)
+    {
+        try
+        {
+            if (lb.Count == 0)
             {
-                Console.WriteLine(book.ToString());
+                Console.WriteLine("Nenhum item na lista...");
+                Thread.Sleep(2000);
+            }
+            else
+            {
+                foreach (var item in mb)
+                {
+                    Console.WriteLine(item.ToString());
+                    Console.WriteLine("Deseja aprovar esta cotação? (S/N)");
+                    char c = char.Parse(Console.ReadLine().ToLower());
+                    if (c == 's')
+                    {
+                        lb.Add(item);
+
+                    }
+                }
             }
         }
-
-        //string ReadFile(string f)
-        //{
-        //    StreamReader sr = new("shelf.txt");
-        //    string t = "";
-        //    try
-        //    {
-        //        t = sr.ReadToEnd();
-        //    }
-        //    catch (Exception e)
-        //    {
-        //    }
-        //    finally
-        //    {
-        //        sr.Close();
-        //    }
-        //    return t;
-        //}
-        //void Lend(List<Book> lb, string t)
-        //{
-        //    foreach (var item in lb)
-        //    {
-        //        if (t == item.Title)
-        //        {
-        //            lb.Remove();
-        //        }
-        //    }
-        //}
+        catch (Exception e)
+        {
+        }
+        finally
+        {
+        }
+        return lb;
     }
 }
