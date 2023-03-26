@@ -16,10 +16,13 @@ internal class Program
     {
         string shelffile = "shelf.txt";
         string lend = "lends.txt";
+        string reading = "reading.txt";
         List<Book> mybook = new List<Book>();
         List<Book> lendbook = new List<Book>();
+        List<Book> readingbook = new List<Book>();
         mybook = LoadFile(mybook, shelffile);
         lendbook = LoadFile(lendbook, lend);
+        readingbook = LoadFile(readingbook, reading);
 
         do
         {
@@ -33,16 +36,58 @@ internal class Program
                     Console.Clear();
                     break;
                 case 2:
-                    lendbook = Lend(lendbook, mybook);
+                    lendbook = MoviDate(lendbook, mybook);
                     WriteFile(lendbook, lend);
+                    foreach (var i in lendbook)
+                    {
+                        mybook.Remove(i);
+                    }
+                    WriteFile(mybook, shelffile);
                     break;
                 case 3:
+                    readingbook = ReadingBook(readingbook, mybook);
+                    WriteFile(readingbook, reading);
+                    foreach(var i in readingbook)
+                    {
+                        mybook.Remove(i);
+                    }
                     break;
                 case 4:
-                    Console.WriteLine("Consulta de Livros.");
-                    foreach (Book book in mybook)
+                    Console.WriteLine("Livros na estante.");
+                    if (readingbook.Count == 0)
                     {
-                        Console.WriteLine(book.ToString());
+                        Console.WriteLine("Não há livros na estante");
+                    }
+                    else
+                    {
+                        foreach (Book book in mybook)
+                        {
+                            Console.WriteLine(book.ToString()); ;
+                        }
+                    }
+                    Console.WriteLine("\nLivros emprestados.");
+                    if (readingbook.Count == 0)
+                    {
+                        Console.WriteLine("Não há livros emrestados");
+                    }
+                    else
+                    {
+                        foreach (Book book in lendbook)
+                        {
+                            Console.WriteLine(book.ToString());
+                        }
+                    }
+                    Console.WriteLine("\nLivros em leitura.");
+                    if (readingbook.Count == 0)
+                    {
+                        Console.WriteLine("Não há livros em leitura");
+                    }
+                    else
+                    {
+                        foreach (Book book in readingbook)
+                        {
+                            Console.WriteLine(book.ToString()); ;
+                        }
                     }
                     Console.WriteLine("\nAperte qualquer tecla para voltar ao menu.");
 
@@ -75,14 +120,16 @@ internal class Program
         StreamWriter sw = new(f);
         try
         {
-            
-            foreach (var i in l)
+            if (File.Exists(f) && l.Count > 0)
             {
-                sw.WriteLine(i.ToFile());
+                foreach (var i in l)
+                {
+                    sw.WriteLine(i.ToFile());
+                }
+                Console.WriteLine("Processando...");
+                Thread.Sleep(1000);
+                Console.WriteLine("Livro registrado com sucesso.");
             }
-            Console.WriteLine("Processando...");
-            Thread.Sleep(1000);
-            
         }
         catch (Exception e)
         {
@@ -91,7 +138,7 @@ internal class Program
         finally
         {
             sw.Close();
-            Console.WriteLine("Livro registrado com sucesso.");
+
         }
         return l;
     }
@@ -100,10 +147,9 @@ internal class Program
         StreamReader sr = new(f);
         try
         {
-            
             if (File.Exists(f))
             {
-                
+
                 while (!sr.EndOfStream)
                 {
                     string[] aux = sr.ReadLine().Split(",");
@@ -113,16 +159,18 @@ internal class Program
                     int edition = int.Parse(aux[3]);
                     lb.Add(new(title, autor, isbn, edition));
                 }
-                
+                sr.Close();
             }
             else
             {
-                Console.WriteLine("Criando.");
-                Thread.Sleep(1200);
+               
             }
         }
         catch
         {
+            Console.WriteLine("Criando Arquivo.");
+           
+            Thread.Sleep(1200);
         }
         finally
         {
@@ -130,27 +178,18 @@ internal class Program
         }
         return lb;
     }
-    private static List<Book> Lend(List<Book> lb, List<Book> mb)
+    private static List<Book> MoviDate(List<Book> lb, List<Book> mb)
     {
         try
         {
-            if (lb.Count == 0)
+            foreach (var item in mb)
             {
-                Console.WriteLine("Nenhum item na lista...");
-                Thread.Sleep(2000);
-            }
-            else
-            {
-                foreach (var item in mb)
+                Console.WriteLine(item.ToString());
+                Console.WriteLine("Deseja aprovar esta cotação? (S/N)");
+                char c = char.Parse(Console.ReadLine().ToLower());
+                if (c == 's')
                 {
-                    Console.WriteLine(item.ToString());
-                    Console.WriteLine("Deseja aprovar esta cotação? (S/N)");
-                    char c = char.Parse(Console.ReadLine().ToLower());
-                    if (c == 's')
-                    {
-                        lb.Add(item);
-
-                    }
+                    lb.Add(item);
                 }
             }
         }
@@ -162,4 +201,5 @@ internal class Program
         }
         return lb;
     }
+
 }
